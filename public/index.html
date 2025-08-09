@@ -2,54 +2,60 @@
 <html lang="pt-BR">
 <head>
     <script>
-      async function testConnection() {
-        const token = document.getElementById('vercelToken').value.trim();
-        const teamId = document.getElementById('teamId').value.trim();
-        const statusDiv = document.getElementById('connectionStatus');
-        const testBtn = document.getElementById('testBtn');
+async function testConnection() {
+  const token = document.getElementById('vercelToken').value.trim();
+  const teamId = document.getElementById('teamId').value.trim();
+  const statusDiv = document.getElementById('connectionStatus');
+  const testBtn = document.getElementById('testBtn');
 
-        if (!token) {
-          statusDiv.innerHTML = '<div class="alert alert-warning">Por favor, insira seu Token da Vercel.</div>';
-          return;
-        }
+  if (!token) {
+    statusDiv.innerHTML = '<div class="alert alert-warning">Por favor, insira seu Token da Vercel.</div>';
+    return;
+  }
 
-        statusDiv.innerHTML = '<div class="loading"></div> Testando conexão...';
-        testBtn.disabled = true;
+  statusDiv.innerHTML = '<div class="loading"></div> Testando conexão...';
+  testBtn.disabled = true;
 
-        try {
-          const headers = {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          };
+  try {
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
 
-          let url = 'https://api.vercel.com/v6/projects';
-          if (teamId) {
-            url += `?teamId=${teamId}`;
-          }
+    let url = 'https://api.vercel.com/v6/projects';
+    if (teamId) {
+      url += `?teamId=${teamId}`;
+    }
 
-          const response = await axios.get(url, { headers });
+    const response = await axios.get(url, { headers });
 
-          // Verifica se response.data.projects existe e é array
-          if (response.status === 200 && Array.isArray(response.data.projects)) {
-            statusDiv.innerHTML = `<div class="alert alert-success">✅ Conexão bem-sucedida! Encontrados ${response.data.projects.length} projeto(s).</div>`;
-          } else {
-            statusDiv.innerHTML = `<div class="alert alert-error">❌ Erro inesperado: resposta inválida da API.</div>`;
-          }
-        } catch (error) {
-          let message = 'Erro desconhecido ao testar conexão.';
-          if (error.response) {
-            if (error.response.status === 401) message = 'Token inválido ou não autorizado.';
-            else message = `Erro ${error.response.status}: ${error.response.data.error?.message || error.response.statusText}`;
-          } else if (error.request) {
-            message = 'Sem resposta da API. Verifique sua conexão de internet.';
-          } else {
-            message = error.message;
-          }
-          statusDiv.innerHTML = `<div class="alert alert-error">❌ ${message}</div>`;
-        } finally {
-          testBtn.disabled = false;
-        }
-      }
+    console.log('Resposta da API:', response.data);
+
+    // Checa se response.data tem a propriedade projects e é array
+    if (response.status === 200 && Array.isArray(response.data.projects)) {
+      statusDiv.innerHTML = `<div class="alert alert-success">✅ Conexão bem-sucedida! Encontrados ${response.data.projects.length} projeto(s).</div>`;
+    } else if (response.status === 200 && Array.isArray(response.data)) {
+      // Se a resposta for um array direto (algumas APIs retornam assim)
+      statusDiv.innerHTML = `<div class="alert alert-success">✅ Conexão bem-sucedida! Encontrados ${response.data.length} projeto(s).</div>`;
+    } else {
+      statusDiv.innerHTML = `<div class="alert alert-error">❌ Erro inesperado: estrutura da resposta não contém lista de projetos.</div>`;
+    }
+  } catch (error) {
+    let message = 'Erro desconhecido ao testar conexão.';
+    if (error.response) {
+      if (error.response.status === 401) message = 'Token inválido ou não autorizado.';
+      else message = `Erro ${error.response.status}: ${error.response.data.error?.message || error.response.statusText}`;
+    } else if (error.request) {
+      message = 'Sem resposta da API. Verifique sua conexão de internet.';
+    } else {
+      message = error.message;
+    }
+    statusDiv.innerHTML = `<div class="alert alert-error">❌ ${message}</div>`;
+  } finally {
+    testBtn.disabled = false;
+  }
+}
+
     </script>
 
     <script>
