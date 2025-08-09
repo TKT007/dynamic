@@ -1,6 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <script>
+  // Troca de abas
+  function switchTab(tabName) {
+    // Desativa todas as abas e conteúdos
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    
+    // Ativa a aba clicada e o conteúdo correspondente
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+      if (tab.textContent.toLowerCase().includes(tabName)) {
+        tab.classList.add('active');
+      }
+    });
+
+    const content = document.getElementById(tabName);
+    if(content) {
+      content.classList.add('active');
+    }
+  }
+
+  // Inicialização: deixar a aba 'setup' ativa por padrão
+  document.addEventListener('DOMContentLoaded', () => {
+    switchTab('setup');
+  });
+</script>
+
+<script>
+  // Seleção de template cards
+  document.querySelectorAll('.template-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const container = card.parentElement;
+      container.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+
+      // Mostrar/ocultar campo script customizado
+      if (card.dataset.scriptTemplate === 'custom') {
+        document.getElementById('customScriptGroup').style.display = 'block';
+      } else {
+        document.getElementById('customScriptGroup').style.display = 'none';
+      }
+
+      // Mostrar/ocultar upload de site customizado
+      if (card.dataset.siteTemplate === 'custom') {
+        document.getElementById('fileUpload').style.display = 'block';
+      } else {
+        document.getElementById('fileUpload').style.display = 'none';
+      }
+    });
+  });
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vercel Deploy Manager - TikTok Scripts</title>
