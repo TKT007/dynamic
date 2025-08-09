@@ -2,24 +2,58 @@
 <html lang="pt-BR">
 <head>
     <script>
-      async function testarConexao() {
-  const token = document.getElementById('tokenInput').value;
-  const projectName = 'meu-projeto';
+  async function testConnection() {
+    const token = document.getElementById('vercelToken').value.trim();
+    const teamId = document.getElementById('teamId').value.trim();
+    const statusDiv = document.getElementById('connectionStatus');
+    const testBtn = document.getElementById('testBtn');
 
-  const response = await fetch('/api/deploy', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ vercelToken: token, projectName })
-  });
+    if (!token) {
+      statusDiv.innerHTML = '<div class="alert alert-warning">Por favor, insira seu Token da Vercel.</div>';
+      return;
+    }
 
-  const data = await response.json();
+    statusDiv.innerHTML = '<div class="loading"></div> Testando conexão...';
+    testBtn.disabled = true;
 
-  if (response.ok) {
-    alert('Deploy realizado! URL: ' + data.url);
-  } else {
-    alert('Erro: ' + data.error);
+    try {
+      // Montar headers
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      let url = 'https://api.vercel.com/v1/projects';
+      if (teamId) {
+        url += `?teamId=${teamId}`;
+      }
+
+      // Chamar a API da Vercel para listar projetos como teste de conexão
+      const response = await axios.get(url, { headers });
+
+      if (response.status === 200 && response.data.projects) {
+        statusDiv.innerHTML = `<div class="alert alert-success">✅ Conexão bem-sucedida! Encontrados ${response.data.projects.length} projeto(s).</div>`;
+      } else {
+        statusDiv.innerHTML = `<div class="alert alert-error">❌ Erro inesperado: resposta inválida da API.</div>`;
+      }
+    } catch (error) {
+      let message = 'Erro desconhecido ao testar conexão.';
+      if (error.response) {
+        if (error.response.status === 401) message = 'Token inválido ou não autorizado.';
+        else message = `Erro ${error.response.status}: ${error.response.data.error?.message || error.response.statusText}`;
+      } else if (error.request) {
+        message = 'Sem resposta da API. Verifique sua conexão de internet.';
+      } else {
+        message = error.message;
+      }
+      statusDiv.innerHTML = `<div class="alert alert-error">❌ ${message}</div>`;
+    } finally {
+      testBtn.disabled = false;
+    }
   }
-}
+</script>
+
+    <script>
 
   // Troca de abas
   function switchTab(tabName) {
