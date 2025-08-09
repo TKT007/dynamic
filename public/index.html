@@ -2,6 +2,66 @@
 <html lang="pt-BR">
 <head>
     <script>
+async function createProject() {
+  const token = document.getElementById('vercelToken').value.trim();
+  const teamId = document.getElementById('teamId').value.trim();
+  let projectName = document.getElementById('projectName').value.trim();
+  const statusDiv = document.getElementById('createStatus');
+  const createBtn = document.getElementById('createBtn');
+
+  if (!token) {
+    statusDiv.innerHTML = '<div class="alert alert-warning">Insira o token da Vercel para criar projeto.</div>';
+    return;
+  }
+
+  if (!projectName) {
+    projectName = `projeto-${Date.now()}`; // cria nome automático se vazio
+  }
+
+  statusDiv.innerHTML = '<div class="loading"></div> Criando projeto...';
+  createBtn.disabled = true;
+
+  try {
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const data = {
+      name: projectName,
+    };
+
+    if (teamId) {
+      data.teamId = teamId;
+    }
+
+    const response = await axios.post('https://api.vercel.com/v9/projects', data, { headers });
+
+    if (response.status === 200 || response.status === 201) {
+      const proj = response.data;
+      statusDiv.innerHTML = `<div class="alert alert-success">Projeto criado com sucesso: <strong>${proj.name}</strong></div>`;
+      // Você pode chamar aqui a função que atualiza lista de projetos
+      loadProjects();
+    } else {
+      statusDiv.innerHTML = `<div class="alert alert-error">Erro ao criar projeto: status ${response.status}</div>`;
+    }
+  } catch (error) {
+    let msg = 'Erro desconhecido ao criar projeto.';
+    if (error.response) {
+      msg = `Erro ${error.response.status}: ${error.response.data.error?.message || error.response.statusText}`;
+    } else if (error.request) {
+      msg = 'Sem resposta da API. Verifique a conexão.';
+    } else {
+      msg = error.message;
+    }
+    statusDiv.innerHTML = `<div class="alert alert-error">❌ ${msg}</div>`;
+  } finally {
+    createBtn.disabled = false;
+  }
+}
+
+
+        
 async function testConnection() {
   const token = document.getElementById('vercelToken').value.trim();
   const teamId = document.getElementById('teamId').value.trim();
